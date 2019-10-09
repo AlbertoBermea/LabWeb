@@ -3,55 +3,42 @@ const credentials = require('./credentials.js')
 
 const request = require('request');
 
-const forecastWeather = function(lat,lon) {
+const forecastWeather = function(lat,lon,callback) {
     const url = 'https://api.darksky.net/forecast/' + credentials.DARK_SKY_SECRET_KEY + '/'+ lat + ',' + lon + '?lang=es&units=si'
 
     request({ url, json: true }, function(error, response) {
       if (error) {
-        console.log(error)
+        callback(error,undefined)
       } else {
+          
         const data = response.body
 
-        //console.log( data.daily )
-
-        const summary = data.currently.summary
-        const temp = data.currently.temperature
-        const probabilidad = data.currently.precipProbability * 100
-
-        const days = []
-
-        for (i in data.daily.data){
-            const aux = {
-                auxSummary: data.daily.data[i].summary,
-                auxProbabilidad: data.daily.data[i].precipProbability * 100,
-                auxMax: data.daily.data[i].temperatureMax,
-                auxMin: data.daily.data[i].temperatureMin
+        if( data.error ){
+            callback(data)
+        } else {
+            const info = {
+                summary: data.currently.summary,
+                temp: data.currently.temperature,
+                probabilidad: data.currently.precipProbability * 100,
+                days: []
+    
             }
-            
-            days.push(aux)
-        }
-
-        //console.log(days)
-
-        console.log(summary + ". Actualmente esta a " + temp +"°C. Hay " + probabilidad + "% de posibilidad de lluvia" )
-
-        console.log("")
-
-        console.log("Resumen de los siguientes 7 dias estara asi")
-
-        for (i in days){
-            console.log(i)
-            console.log(days[i].auxSummary )
-            console.log("Probabilidad de lluvia de " + days[i].auxProbabilidad + "%" )
-            console.log("Minima de " + days[i].auxMin )
-            console.log("Maxima de " + days[i].auxMax )
+    
+    
+            for (i in data.daily.data){
+                const aux = {
+                    auxSummary: data.daily.data[i].summary,
+                    auxProbabilidad: data.daily.data[i].precipProbability * 100,
+                    auxMax: data.daily.data[i].temperatureMax,
+                    auxMin: data.daily.data[i].temperatureMin
+                }
+                
+                info.days.push(aux)
+            }
+    
+            callback(info)
         }
         
-
-        //console.log(summary)
-        //console.log(temp)
-        //console.log(probabilidad)
-
       }  
     })
   
@@ -68,9 +55,11 @@ const forwardGeoCode = function(place,callback) {
       } else {
         const data = response.body
 
+        //console.log(data)
         
-        if ( data.Response == 'False' ) {
-          console.log(data.Error)
+        
+        if ( data.message ) {
+          callback(data)
         } else {
           
             const info = {
@@ -88,7 +77,32 @@ const forwardGeoCode = function(place,callback) {
 
 
 
-forwardGeoCode("Monterrey",function(data){
+forwardGeoCode("Monterrey",function(data){  
     
-    forecastWeather(data.lat,data.lon)
+    if(data.message){
+        console.log(data)
+    }
+    else{
+        forecastWeather(data.lat,data.lon,function(data){
+
+            if(data.error){
+                console.log(data)
+            }
+            else{
+                console.log(data.summary + ". Actualmente esta a " + data.temp +"°C. Hay " + data.probabilidad + "% de posibilidad de lluvia" )
+
+                console.log("")
+
+                console.log("Resumen de los siguientes 7 dias estara asi")
+
+                for (i in data.days){
+                    console.log(i)
+                    console.log(data.days[i].auxSummary )
+                    console.log("Probabilidad de lluvia de " + data.days[i].auxProbabilidad + "%" )
+                    console.log("Minima de " + data.days[i].auxMin )
+                    console.log("Maxima de " + data.days[i].auxMax )
+                }
+            }
+        })
+    }
 })
