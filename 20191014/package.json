@@ -1,16 +1,16 @@
 {
-  "name": "miniserver",
+  "name": "20191014_miniserver",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node app.js"
   },
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
-    "nodemon": "^1.19.3",
-    "require": "^2.4.20"
+    "request": "^2.88.0"
   }
 }
